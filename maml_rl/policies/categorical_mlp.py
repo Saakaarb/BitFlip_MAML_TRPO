@@ -36,6 +36,7 @@ class CategoricalMLPPolicy(Policy):
 
         output = input
         for i in range(1, self.num_layers):
+            output=output.type(torch.FloatTensor)
             output = F.linear(output,
                               weight=params['layer{0}.weight'.format(i)],
                               bias=params['layer{0}.bias'.format(i)])

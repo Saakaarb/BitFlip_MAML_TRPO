@@ -4,14 +4,14 @@ import json
 import os
 import yaml
 from tqdm import trange
-
+import numpy as np
 import maml_rl.envs
 from maml_rl.metalearners import MAMLTRPO
 from maml_rl.baseline import LinearFeatureBaseline
 from maml_rl.samplers import MultiTaskSampler
 from maml_rl.utils.helpers import get_policy_for_env, get_input_size
 from maml_rl.utils.reinforcement_learning import get_returns
-
+import matplotlib.pyplot as plt
 
 def main(args):
     with open(args.config, 'r') as f:
@@ -59,6 +59,7 @@ def main(args):
                            device=args.device)
 
     num_iterations = 0
+    val_acc=[]
     for batch in trange(config['num-batches']):
         tasks = sampler.sample_tasks(num_tasks=config['meta-batch-size'])
         futures = sampler.sample_async(tasks,
@@ -81,12 +82,19 @@ def main(args):
                     num_iterations=num_iterations,
                     train_returns=get_returns(train_episodes[0]),
                     valid_returns=get_returns(valid_episodes))
-
         # Save policy
+        print("Training",np.mean(get_returns(train_episodes[0])))
+        print("Validation",np.mean(get_returns(valid_episodes)))
+        val_acc.append(np.mean(get_returns(valid_episodes)))
         if args.output_folder is not None:
             with open(policy_filename, 'wb') as f:
                 torch.save(policy.state_dict(), f)
 
+    plt.plot(range(len(val_acc)),val_acc)
+    plt.xlabel('Training Epochs')
+    plt.ylabel('Reward on Validation Eg.')
+    plt.title('Non Goal conditioned Bitflip')
+    plt.show()
 
 if __name__ == '__main__':
     import argparse
@@ -99,6 +107,7 @@ if __name__ == '__main__':
         help='path to the configuration file.')
 
     # Miscellaneous
+    
     misc = parser.add_argument_group('Miscellaneous')
     misc.add_argument('--output-folder', type=str,
         help='name of the output folder')

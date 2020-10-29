@@ -27,4 +27,5 @@ def get_policy_for_env(env, hidden_sizes=(100, 100), nonlinearity='relu'):
     return policy
 
 def get_input_size(env):
+    print(env.observation_space)
     return reduce(mul, env.observation_space.shape, 1)

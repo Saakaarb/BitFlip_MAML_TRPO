@@ -61,3 +61,11 @@ register(
     entry_point='maml_rl.envs.navigation:Navigation2DEnv',
     max_episode_steps=100
 )
+
+
+register(
+    'BitFlipEnv-v0',
+    entry_point='maml_rl.envs.bitflip_env:BitFlipEnv',
+    max_episode_steps=100
+)
+
