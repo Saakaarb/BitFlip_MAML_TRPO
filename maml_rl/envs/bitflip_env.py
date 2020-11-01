@@ -42,6 +42,10 @@ class BitFlipEnv(gym.Env):
         # randomly set the goal vector
         self.goal_vector = np.random.randint(0, 2, num_bits)
         # whether to print debugging info
+
+        # Concat w goal 
+        self.state_vector=np.concatenate((self.state_vector,self.goal_vector))
+
         self.verbose = verbose
         #  set dimensions of observation space
         '''
@@ -53,11 +57,11 @@ class BitFlipEnv(gym.Env):
                                 spaces.Discrete(2),
                                 spaces.Discrete(2)))
         '''
-        self.observation_space=spaces.MultiBinary(num_bits)
+        self.observation_space=spaces.MultiBinary(int(2*num_bits))
         #  create action space; may use gym type
         self.action_space = spaces.Discrete(num_bits)
         # space of the goal vector
-        self.goal_space = self.goal_vector
+        #self.goal_space = self.goal_vector
         # number of steps taken
         self.steps = 0
         print("BitFlip initialized")
@@ -77,6 +81,7 @@ class BitFlipEnv(gym.Env):
 
         # randomly reset both the state and the goal vectors
         self.state_vector = np.random.randint(0, 2, self.num_bits)
+        self.state_vector=np.concatenate((self.state_vector,self.goal_vector))
         #self.goal_vector = np.random.randint(0, 2, self.num_bits)
         self.steps = 0
 
@@ -92,7 +97,6 @@ class BitFlipEnv(gym.Env):
                  reward - 0 if state != goal and 1 if state == goal
                  done - boolean value indicating if the goal has been reached'''
         self.steps += 1
-
 
         if action < 0 or action >= self.num_bits:
             # check argument is in range
@@ -112,7 +116,7 @@ class BitFlipEnv(gym.Env):
         done = True
         #print(self.show_goal(),self.show_state())
         # check if state and goal vectors are identical
-        if False in (self.state_vector == self.goal_vector):
+        if False in (self.state_vector[:self.num_bits] == self.goal_vector):
             reward = -1
             done = False
 
@@ -143,5 +147,6 @@ class BitFlipEnv(gym.Env):
         #self.task=task 
         #print("Reset")
         #print(task)
+        self.state_vector[self.num_bits:]=task['goal']
         self.goal_vector=task['goal']
 
