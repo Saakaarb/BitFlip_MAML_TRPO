@@ -1,4 +1,5 @@
 from gym.envs.registration import register
+from maml_rl.envs.car_racing import CarRacingV1
 
 # Bandit
 # ----------------------------------------
