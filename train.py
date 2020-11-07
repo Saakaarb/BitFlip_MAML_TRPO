@@ -1,17 +1,17 @@
-import gym
-import torch
-import json
 import os
+import gym
+import json
 import yaml
-from tqdm import trange
+import torch
 import numpy as np
+import matplotlib.pyplot as plt
+from tqdm import trange
 import maml_rl.envs
 from maml_rl.metalearners import MAMLTRPO
 from maml_rl.baseline import LinearFeatureBaseline
 from maml_rl.samplers import MultiTaskSampler
 from maml_rl.utils.helpers import get_policy_for_env, get_input_size
 from maml_rl.utils.reinforcement_learning import get_returns
-import matplotlib.pyplot as plt
 
 def main(args):
     with open(args.config, 'r') as f:
