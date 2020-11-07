@@ -28,7 +28,7 @@ class EnvMeta(type):
 
 class CarRacingV1(gym.Env, metaclass=EnvMeta):
 	name = "CarRacing-v1"
-	def __init__(self, track_name=track_name, max_time=None, delta_t=2*DELTA_T, withtrack=False):
+	def __init__(self, track_name=track_name, max_time=None, delta_t=2.5*DELTA_T, withtrack=False):
 		self.ref = RefDriver(track_name)
 		self.track = Track(track_name)
 		self.dynamics = CarDynamics()
@@ -38,15 +38,17 @@ class CarRacingV1(gym.Env, metaclass=EnvMeta):
 		self.cost_model = CostModel(self.track, self.ref, self.max_time, self.delta_t)
 		self.action_space = self.dynamics.action_space
 		self.observation_space = gym.spaces.Box(-np.inf, np.inf, self.reset().shape)
-		self.spec = gym.envs.registration.EnvSpec(self.name, max_episode_steps=int(self.max_time/self.delta_t))
+		self.spec = gym.envs.registration.EnvSpec(f"CarRacing-{track_name}-v1", max_episode_steps=int(self.max_time/self.delta_t))
+		self.spec.max_episode_steps = int(self.max_time/self.delta_t)
 
-	def reset(self, train=True, meta=False):
+	def reset(self, train=True, meta=True):
 		self.time = 0
 		self.realtime = 0.0
 		self.action = np.zeros(self.action_space.shape)
-		self.dynamics.reset(self.ref.start_pos, self.ref.start_vel, *np.random.random(2)*meta)
+		self.dynamics.reset(self.ref.start_pos, self.ref.start_vel)
 		self.state_spec, state = self.observation()
 		self.info = {"ref":{}, "car":{}}
+		self.done = False
 		return state
 
 	def step(self, action, device=None, info=True):
@@ -56,8 +58,9 @@ class CarRacingV1(gym.Env, metaclass=EnvMeta):
 		next_state_spec, next_state = self.observation()
 		reward = -self.cost_model.get_cost(next_state_spec, self.state_spec, self.time, True)
 		trackdist = self.track.get_nearest(next_state[...,[0,1]])[1]
-		done = np.logical_or(trackdist > 40.0, next_state_spec.Vx < 8.0)
-		done = np.logical_or(self.realtime >= self.max_time, done)
+		done = np.logical_or(trackdist > 40.0, self.done)
+		done = np.logical_or(next_state_spec.Vx < 8.0, done)
+		self.done = np.logical_or(self.realtime >= self.max_time, done)
 		self.info = self.get_info(reward, action) if info else {"ref":{}, "car":{}}
 		self.state_spec = next_state_spec
 		return next_state, reward, done, self.info
@@ -77,7 +80,7 @@ class CarRacingV1(gym.Env, metaclass=EnvMeta):
 		state = np.concatenate([dyn_state, realtime], axis=-1)
 		self.dynamics_size = state.shape[-1]
 		spec = self.observation_spec(state)
-		dyn_meta = np.concatenate([np.ones_like(realtime)*self.dynamics.turn_limit, np.ones_like(realtime)*self.dynamics.pedal_limit], -1)
+		dyn_meta = np.concatenate([np.ones_like(realtime)*self.dynamics.turn_scale, np.ones_like(realtime)*self.dynamics.pedal_scale], -1)
 		state = np.concatenate([state, self.track.get_path(dyn_state[...,[0,1]], heading=spec.ψ), dyn_meta], -1) if self.withtrack else state
 		return spec, state
 
@@ -110,6 +113,13 @@ class CarRacingV1(gym.Env, metaclass=EnvMeta):
 	def close(self, path=None):
 		if hasattr(self, "viewer"): self.viewer.close(path)
 		self.closed = True
+
+	def sample_tasks(self, num_tasks):
+		tasks=[{'task':np.random.random(2)} for i in range(num_tasks)]
+		return tasks
+
+	def reset_task(self, task):
+		self.dynamics.reset(self.ref.start_pos, self.ref.start_vel, *task["task"])
 
 def info_stats(state, realtime, reward, action):
 	turn_rate = action[...,0]
