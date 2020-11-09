@@ -18,8 +18,8 @@ def main(args):
     if args.seed is not None:
         torch.manual_seed(args.seed)
         torch.cuda.manual_seed_all(args.seed)
-
-    env = gym.make(config['env-name'], **config['env-kwargs'])
+    config["env-kwargs"] = config.get('env-kwargs',{})
+    env = gym.make(config['env-name'], **config.get('env-kwargs',{}))
     env.close()
 
     # Policy
