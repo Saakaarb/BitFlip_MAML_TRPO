@@ -28,19 +28,19 @@ class InputController():
 			print(e)
 		return action
 
-def test_input(nsteps=100):
-	env = gym.make("CarRacing-curve-v1")
+def test_input(nsteps=400):
+	env = gym.make("CarRacing-cubic-v1")
 	agent = InputController(env.observation_space.shape, env.action_space.shape)
 	state = env.reset()
 	total_reward = None
 	done = False
 	for step in range(0,nsteps):
-		action = agent.get_action(state, 0.0, True)
+		action = agent.get_action(state, 0.0, False)
 		state, reward, done, info = env.step(action)
 		total_reward = reward  if total_reward is None else total_reward + reward
 		log_string = f"Step: {step:8d}, Reward: {reward:5.3f}, Action: {np.array2string(action, separator=',')}, Done: {done}"
 		print(log_string)
-		# env.render()
+		env.render()
 	print(f"Reward: {total_reward}")
 	env.close()
 

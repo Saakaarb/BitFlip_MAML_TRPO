@@ -1,7 +1,7 @@
 # General
 # -------
 # Name of the environment.
-env-name: "CarRacing-curve-v1"
+env-name: "CarRacing-cubic-v1"
 
 # Additional parameters for the environment (eg. bound for task sampling).
 # env-kwargs:

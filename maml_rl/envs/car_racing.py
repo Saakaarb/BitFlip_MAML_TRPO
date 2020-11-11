@@ -57,9 +57,11 @@ class CarRacingV1(gym.Env, metaclass=EnvMeta):
 		self.dynamics.step(action, dt=self.delta_t, use_delta=False)
 		next_state_spec, next_state = self.observation()
 		reward = -self.cost_model.get_cost(next_state_spec, self.state_spec, self.time, True)
-		trackdist = self.track.get_nearest(next_state[...,[0,1]])[1]
-		done = np.logical_or(trackdist > 40.0, self.done)
-		done = np.logical_or(next_state_spec.Vx < 8.0, done)
+		reftime = self.ref.get_time(next_state[...,[0,1]], next_state_spec.S)
+		ind, trackdist = self.track.get_nearest(next_state[...,[0,1]])
+		done = np.logical_or(trackdist > 300.0, self.done)
+		done = np.logical_or(reftime >= self.max_time, done)
+		done = np.logical_or(next_state_spec.Vx < 2.0, done)
 		self.done = np.logical_or(self.realtime >= self.max_time, done)
 		self.info = self.get_info(reward, action) if info else {"ref":{}, "car":{}}
 		self.state_spec = next_state_spec
