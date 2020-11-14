@@ -18,7 +18,7 @@ first-order: false
 # Policy network
 # --------------
 # Number of hidden units in each layer.
-hidden-sizes: [64, 64]
+hidden-sizes: [128, 128]
 
 # Non-linear activation function to apply after each hidden layer.
 nonlinearity: "tanh"
@@ -32,7 +32,7 @@ fast-batch-size: 20
 num-steps: 1
 
 # Step size for each gradient step in the inner loop / fast adaptation.
-fast-lr: 0.1
+fast-lr: 0.01
 
 # Optimization
 # ------------
