@@ -13,7 +13,6 @@ class Policy(nn.Module):
         super(Policy, self).__init__()
         self.input_size = input_size
         self.output_size = output_size
-
         # For compatibility with Torchmeta
         self.named_meta_parameters = self.named_parameters
         self.meta_parameters = self.parameters
@@ -25,12 +24,8 @@ class Policy(nn.Module):
         """
         if params is None:
             params = OrderedDict(self.named_meta_parameters())
-
-        grads = torch.autograd.grad(loss, params.values(),
-                                    create_graph=not first_order)
-
+        grads = torch.autograd.grad(loss, params.values(), create_graph=not first_order)
         updated_params = OrderedDict()
         for (name, param), grad in zip(params.items(), grads):
             updated_params[name] = param - step_size * grad
-
         return updated_params

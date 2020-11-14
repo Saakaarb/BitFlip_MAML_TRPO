@@ -1,8 +1,5 @@
 {
-  "env-name": "BitFlipEnv-v0",
-  "env-kwargs": {
-    "num_bits": 7
-  },
+  "env-name": "CarRacing-cubic-v1",
   "gamma": 0.99,
   "gae-lambda": 1.0,
   "first-order": false,
@@ -11,20 +8,20 @@
     64
   ],
   "nonlinearity": "tanh",
-  "fast-batch-size": 16,
+  "fast-batch-size": 20,
   "num-steps": 1,
   "fast-lr": 0.1,
   "num-batches": 500,
-  "meta-batch-size": 20,
+  "meta-batch-size": 16,
   "max-kl": 0.01,
   "cg-iters": 10,
   "cg-damping": 1e-05,
   "ls-max-steps": 15,
   "ls-backtrack-ratio": 0.8,
-  "config": "configs/maml/bitflip.yaml",
-  "output_folder": "maml-bitflip",
+  "config": "configs/maml/car_racing.yaml",
+  "output_folder": "maml-car_racing-2",
   "seed": null,
-  "num_workers": 1,
+  "num_workers": 16,
   "use_cuda": false,
   "device": "cpu"
 }

@@ -14,16 +14,10 @@ def get_policy_for_env(env, hidden_sizes=(100, 100), nonlinearity='relu'):
 
     if continuous_actions:
         output_size = reduce(mul, env.action_space.shape, 1)
-        policy = NormalMLPPolicy(input_size,
-                                 output_size,
-                                 hidden_sizes=tuple(hidden_sizes),
-                                 nonlinearity=nonlinearity)
+        policy = NormalMLPPolicy(input_size, output_size, hidden_sizes=tuple(hidden_sizes), nonlinearity=nonlinearity)
     else:
         output_size = env.action_space.n
-        policy = CategoricalMLPPolicy(input_size,
-                                      output_size,
-                                      hidden_sizes=tuple(hidden_sizes),
-                                      nonlinearity=nonlinearity)
+        policy = CategoricalMLPPolicy(input_size, output_size, hidden_sizes=tuple(hidden_sizes), nonlinearity=nonlinearity)
     return policy
 
 def get_input_size(env):

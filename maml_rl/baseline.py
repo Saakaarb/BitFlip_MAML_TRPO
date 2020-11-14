@@ -16,13 +16,9 @@ class LinearFeatureBaseline(nn.Module):
         super(LinearFeatureBaseline, self).__init__()
         self.input_size = input_size
         self._reg_coeff = reg_coeff
-
-        self.weight = nn.Parameter(torch.Tensor(self.feature_size,),
-                                   requires_grad=False)
+        self.weight = nn.Parameter(torch.Tensor(self.feature_size,), requires_grad=False)
         self.weight.data.zero_()
-        self._eye = torch.eye(self.feature_size,
-                              dtype=torch.float32,
-                              device=self.weight.device)
+        self._eye = torch.eye(self.feature_size, dtype=torch.float32, device=self.weight.device)
 
     @property
     def feature_size(self):
@@ -32,15 +28,7 @@ class LinearFeatureBaseline(nn.Module):
         ones = episodes.mask.unsqueeze(2)
         observations = episodes.observations
         time_step = torch.arange(len(episodes)).view(-1, 1, 1) * ones / 100.0
-
-        return torch.cat([
-            observations,
-            observations ** 2,
-            time_step,
-            time_step ** 2,
-            time_step ** 3,
-            ones
-        ], dim=2)
+        return torch.cat([observations, observations ** 2, time_step, time_step ** 2, time_step ** 3, ones], dim=2)
 
     def fit(self, episodes):
         # sequence_length * batch_size x feature_size
@@ -53,19 +41,16 @@ class LinearFeatureBaseline(nn.Module):
         flat_mask_nnz = torch.nonzero(flat_mask)
         featmat = featmat[flat_mask_nnz].view(-1, self.feature_size)
         returns = returns[flat_mask_nnz].view(-1, 1)
-
         reg_coeff = self._reg_coeff
         XT_y = torch.matmul(featmat.t(), returns)
         XT_X = torch.matmul(featmat.t(), featmat)
         for _ in range(5):
             try:
                 coeffs, _ = torch.lstsq(XT_y, XT_X + reg_coeff * self._eye)
-
                 # An extra round of increasing regularization eliminated
                 # inf or nan in the least-squares solution most of the time
                 if torch.isnan(coeffs).any() or torch.isinf(coeffs).any():
                     raise RuntimeError
-
                 break
             except RuntimeError:
                 reg_coeff *= 10

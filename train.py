@@ -3,6 +3,7 @@ import gym
 import json
 import yaml
 import torch
+import time
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import trange
@@ -13,6 +14,10 @@ from maml_rl.samplers import MultiTaskSampler
 from maml_rl.utils.helpers import get_policy_for_env, get_input_size
 from maml_rl.utils.reinforcement_learning import get_returns
 
+def get_time(start):
+    delta = time.gmtime(time.time()-start)
+    return f"{delta.tm_mday-1}-{time.strftime('%H:%M:%S', delta)}"
+
 def main(args):
     with open(args.config, 'r') as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
@@ -20,6 +25,7 @@ def main(args):
         if not os.path.exists(args.output_folder): os.makedirs(args.output_folder)
         policy_filename = os.path.join(args.output_folder, 'policy.th')
         config_filename = os.path.join(args.output_folder, 'config.json')
+        log_filename = os.path.join(args.output_folder, 'logs_0.txt')
         with open(config_filename, 'w') as f:
             config.update(vars(args))
             json.dump(config, f, indent=2)
@@ -38,6 +44,9 @@ def main(args):
     metalearner = MAMLTRPO(policy, fast_lr=config['fast-lr'], first_order=config['first-order'], device=args.device)
     num_iterations = 0
     val_acc=[]
+    start = time.time()
+    ep = 0
+    total_rewards = []
     for batch in trange(config['num-batches']):
         tasks = sampler.sample_tasks(num_tasks=config['meta-batch-size'])
         futures = sampler.sample_async(tasks, num_steps=config['num-steps'], fast_lr=config['fast-lr'], gamma=config['gamma'], gae_lambda=config['gae-lambda'], device=args.device)
@@ -47,16 +56,22 @@ def main(args):
         num_iterations += sum(sum(episode.lengths) for episode in valid_episodes)
         logs.update(tasks=tasks, num_iterations=num_iterations, train_returns=get_returns(train_episodes[0]), valid_returns=get_returns(valid_episodes))
         # Save policy
-        print("Training",np.mean(get_returns(train_episodes[0])))
-        print("Validation",np.mean(get_returns(valid_episodes)))
+        # print("Training",np.mean(get_returns(train_episodes[0])))
+        # print("Validation",np.mean(get_returns(valid_episodes)))
+        total_rewards.append(np.mean(get_returns(valid_episodes)))
+        string = f"Step: {ep:7d}, Reward: {total_rewards[-1]:9.3f} [{np.mean(get_returns(train_episodes[0])):8.3f}], Avg: {np.mean(total_rewards, axis=0):9.3f} (1.00) <{get_time(start)}> ({{}})"
+        print(string)
+        with open(log_filename, "a+") as f:
+            f.write(string + "\n")
         val_acc.append(np.mean(get_returns(valid_episodes)))
         if args.output_folder is not None:
             with open(policy_filename, 'wb') as f:
                 torch.save(policy.state_dict(), f)
+        ep += 1
     plt.plot(range(len(val_acc)),val_acc)
     plt.xlabel('Training Epochs')
     plt.ylabel('Reward on Validation Eg.')
-    plt.title(f"Non Goal conditioned {config['env-name']}")
+    plt.title('Non Goal conditioned Bitflip')
     plt.show()
 
 if __name__ == '__main__':
@@ -68,7 +83,7 @@ if __name__ == '__main__':
     misc = parser.add_argument_group('Miscellaneous')
     misc.add_argument('--output-folder', type=str, help='name of the output folder')
     misc.add_argument('--seed', type=int, default=None, help='random seed')
-    misc.add_argument('--num-workers', type=int, default=mp.cpu_count() - 1, help='number of workers for trajectories sampling (default: {0})'.format(mp.cpu_count() - 1))
+    misc.add_argument('--num-workers', type=int, default=16, help='number of workers for trajectories sampling (default: {0})'.format(mp.cpu_count() - 1))
     misc.add_argument('--use-cuda', action='store_true', help='use cuda (default: false, use cpu). WARNING: Full upport for cuda is not guaranteed. Using CPU is encouraged.')
     args = parser.parse_args()
     args.device = ('cuda' if (torch.cuda.is_available() and args.use_cuda) else 'cpu')

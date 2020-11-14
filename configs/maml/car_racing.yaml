@@ -40,7 +40,7 @@ fast-lr: 0.1
 num-batches: 500
 
 # Number of tasks in each batch of tasks.
-meta-batch-size: 20
+meta-batch-size: 16
 
 # TRPO-specific
 # -------------
