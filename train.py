@@ -83,7 +83,7 @@ if __name__ == '__main__':
     misc = parser.add_argument_group('Miscellaneous')
     misc.add_argument('--output-folder', type=str, help='name of the output folder')
     misc.add_argument('--seed', type=int, default=None, help='random seed')
-    misc.add_argument('--num-workers', type=int, default=1, help='number of workers for trajectories sampling (default: {0})'.format(mp.cpu_count() - 1))
+    misc.add_argument('--num-workers', type=int, default=8, help='number of workers for trajectories sampling (default: {0})'.format(mp.cpu_count() - 1))
     misc.add_argument('--use-cuda', action='store_true', help='use cuda (default: false, use cpu). WARNING: Full upport for cuda is not guaranteed. Using CPU is encouraged.')
     args = parser.parse_args()
     args.device = ('cuda' if (torch.cuda.is_available() and args.use_cuda) else 'cpu')

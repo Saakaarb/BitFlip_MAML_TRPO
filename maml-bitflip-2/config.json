@@ -24,7 +24,7 @@
   "config": "configs/maml/bitflip.yaml",
   "output_folder": "maml-bitflip-2",
   "seed": null,
-  "num_workers": 1,
+  "num_workers": 8,
   "use_cuda": false,
   "device": "cpu"
 }

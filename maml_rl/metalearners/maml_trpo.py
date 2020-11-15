@@ -90,23 +90,23 @@ class MAMLTRPO(GradientBasedMetaLearner):
         old_losses, old_kls, old_pis = self._async_gather([self.surrogate_loss(train, valid, old_pi=None) for (train, valid) in zip(zip(*train_futures), valid_futures)])
         logs['loss_before'] = to_numpy(old_losses)
         logs['kl_before'] = to_numpy(old_kls)
-        # old_loss = sum(old_losses) / num_tasks
-        for old_loss, old_kl in zip(old_losses, old_kls):
-            grads = torch.autograd.grad(old_loss, self.policy.parameters(), retain_graph=True)
-            grads = parameters_to_vector(grads)
-            # Compute the step direction with Conjugate Gradient
-            # old_kl = sum(old_kls) / num_tasks
-            hessian_vector_product = self.hessian_vector_product(old_kl, damping=cg_damping)
-            stepdir = conjugate_gradient(hessian_vector_product, grads, cg_iters=cg_iters)
-            # Compute the Lagrange multiplier
-            shs = 0.5 * torch.dot(stepdir, hessian_vector_product(stepdir, retain_graph=False))
-            lagrange_multiplier = torch.sqrt(shs / max_kl)
-            step = stepdir / lagrange_multiplier
-            # Save the old parameters
-            old_params = parameters_to_vector(self.policy.parameters())
-            # Line search
-            step_size = 0.05
-            vector_to_parameters(old_params - step_size * step, self.policy.parameters())
+        old_loss = sum(old_losses) / num_tasks
+        # for old_loss, old_kl in zip(old_losses, old_kls):
+        grads = torch.autograd.grad(old_loss, self.policy.parameters(), retain_graph=True)
+        grads = parameters_to_vector(grads)
+        # Compute the step direction with Conjugate Gradient
+        old_kl = sum(old_kls) / num_tasks
+        hessian_vector_product = self.hessian_vector_product(old_kl, damping=cg_damping)
+        stepdir = conjugate_gradient(hessian_vector_product, grads, cg_iters=cg_iters)
+        # Compute the Lagrange multiplier
+        shs = 0.5 * torch.dot(stepdir, hessian_vector_product(stepdir, retain_graph=False))
+        lagrange_multiplier = torch.sqrt(shs / max_kl)
+        step = stepdir / lagrange_multiplier
+        # Save the old parameters
+        old_params = parameters_to_vector(self.policy.parameters())
+        # Line search
+        step_size = 0.05
+        vector_to_parameters(old_params - step_size * step, self.policy.parameters())
         # step_size = 1.0
         # for e in range(ls_max_steps):
         #     vector_to_parameters(old_params - step_size * step, self.policy.parameters())
