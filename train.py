@@ -71,7 +71,7 @@ def main(args):
     plt.plot(range(len(val_acc)),val_acc)
     plt.xlabel('Training Epochs')
     plt.ylabel('Reward on Validation Eg.')
-    plt.title('Non Goal conditioned Bitflip')
+    plt.title(f'Non Goal conditioned {config["env-name"]}')
     plt.show()
 
 if __name__ == '__main__':

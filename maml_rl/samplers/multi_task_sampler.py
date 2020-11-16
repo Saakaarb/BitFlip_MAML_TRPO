@@ -60,7 +60,7 @@ class MultiTaskSampler(Sampler):
         not have to be equal to the number of tasks in a batch (ie. `meta_batch_size`),
         and can scale with the amount of CPUs available instead.
     """
-    def __init__(self, env_name, env_kwargs, batch_size, policy, baseline, env=None, seed=None, num_workers=1):
+    def __init__(self, env_name, env_kwargs, batch_size, policy, baseline, env=None, seed=None, num_workers=1, render=False):
         super(MultiTaskSampler, self).__init__(env_name, env_kwargs, batch_size, policy, seed=seed, env=env)
         self.num_workers = num_workers
         self.task_queue = mp.JoinableQueue()
@@ -68,7 +68,7 @@ class MultiTaskSampler(Sampler):
         self.valid_episodes_queue = mp.Queue()
         policy_lock = mp.Lock()
         self.workers = [SamplerWorker(index, env_name, env_kwargs, batch_size, self.env.observation_space, self.env.action_space, self.policy, 
-            deepcopy(baseline), self.seed, self.task_queue, self.train_episodes_queue, self.valid_episodes_queue, policy_lock) for index in range(num_workers)]
+            deepcopy(baseline), self.seed, self.task_queue, self.train_episodes_queue, self.valid_episodes_queue, policy_lock, render) for index in range(num_workers)]
         for worker in self.workers:
             worker.daemon = True
             worker.start()
@@ -156,7 +156,7 @@ class MultiTaskSampler(Sampler):
 
 
 class SamplerWorker(mp.Process):
-    def __init__(self, index, env_name, env_kwargs, batch_size, observation_space, action_space, policy, baseline, seed, task_queue, train_queue, valid_queue, policy_lock):
+    def __init__(self, index, env_name, env_kwargs, batch_size, observation_space, action_space, policy, baseline, seed, task_queue, train_queue, valid_queue, policy_lock, render):
         super(SamplerWorker, self).__init__()
         env_fns = [make_env(env_name, env_kwargs=env_kwargs) for _ in range(batch_size)]
         self.envs = SyncVectorEnv(env_fns, observation_space=observation_space, action_space=action_space)
@@ -168,8 +168,10 @@ class SamplerWorker(mp.Process):
         self.train_queue = train_queue
         self.valid_queue = valid_queue
         self.policy_lock = policy_lock
+        self.render = render
 
-    def sample(self, index, num_steps=1, fast_lr=0.5, gamma=0.95, gae_lambda=1.0, device='cpu', render=False):
+    def sample(self, index, num_steps=1, fast_lr=0.5, gamma=0.95, gae_lambda=1.0, device='cpu', render=None):
+        if render is None: render = self.render
         # Sample the training trajectories with the initial policy and adapt the
         # policy to the task, based on the REINFORCE loss computed on the
         # training trajectories. The gradient update in the fast adaptation uses

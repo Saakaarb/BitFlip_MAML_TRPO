@@ -28,7 +28,7 @@ def main(args):
     # Baseline
     baseline = LinearFeatureBaseline(get_input_size(env))
     # Sampler
-    sampler = MultiTaskSampler(config['env-name'], env_kwargs={}, batch_size=1, policy=policy, baseline=baseline, env=env, seed=args.seed, num_workers=args.num_workers)
+    sampler = MultiTaskSampler(config['env-name'], env_kwargs={}, batch_size=1, policy=policy, baseline=baseline, env=env, seed=args.seed, num_workers=args.num_workers,render=True)
     logs = {'tasks': []}
     train_returns, valid_returns = [], []
     # for batch in trange(args.num_batches):
@@ -50,8 +50,8 @@ if __name__ == '__main__':
     import os
     import multiprocessing as mp
     parser = argparse.ArgumentParser(description='Reinforcement learning with Model-Agnostic Meta-Learning (MAML) - Test')
-    parser.add_argument('--config', type=str, default="maml-car_racing-3/config.json", help='path to the configuration file')
-    parser.add_argument('--policy', type=str, default="maml-car_racing-3/policy.th", help='path to the policy checkpoint')
+    parser.add_argument('--config', type=str, default="maml-car_racing-8/config.json", help='path to the configuration file')
+    parser.add_argument('--policy', type=str, default="maml-car_racing-8/policy.th", help='path to the policy checkpoint')
     # Evaluation
     evaluation = parser.add_argument_group('Evaluation')
     evaluation.add_argument('--num-batches', type=int, default=1, help='number of batches (default: 10)')

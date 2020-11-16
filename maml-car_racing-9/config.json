@@ -1,0 +1,27 @@
+{
+  "env-name": "CarRacing-cubic-v1",
+  "gamma": 0.99,
+  "gae-lambda": 0.95,
+  "first-order": false,
+  "hidden-sizes": [
+    128,
+    128
+  ],
+  "nonlinearity": "tanh",
+  "fast-batch-size": 10,
+  "num-steps": 1,
+  "fast-lr": 0.0001,
+  "num-batches": 250,
+  "meta-batch-size": 8,
+  "max-kl": 0.01,
+  "cg-iters": 10,
+  "cg-damping": 1e-05,
+  "ls-max-steps": 5,
+  "ls-backtrack-ratio": 0.5,
+  "config": "configs/maml/car_racing.yaml",
+  "output_folder": "maml-car_racing-9",
+  "seed": null,
+  "num_workers": 8,
+  "use_cuda": false,
+  "device": "cpu"
+}
