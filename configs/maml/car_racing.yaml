@@ -10,7 +10,7 @@ env-name: "CarRacing-cubic-v1"
 gamma: 0.99
 
 # Discount factor lambda used in "Generalized Advantage Estimation" (GAE).
-gae-lambda: 1.0
+gae-lambda: 0.95
 
 # If "true", then the first order approximation of MAML is applied.
 first-order: false
@@ -26,7 +26,7 @@ nonlinearity: "tanh"
 # Task-specific
 # -------------
 # Number of trajectories to sample for each task.
-fast-batch-size: 10
+fast-batch-size: 1
 
 # Number of gradient steps in the inner loop / fast adaptation.
 num-steps: 1
@@ -37,10 +37,10 @@ fast-lr: 0.01
 # Optimization
 # ------------
 # Number of outer-loop updates (ie. number of batches of tasks).
-num-batches: 500
+num-batches: 250
 
 # Number of tasks in each batch of tasks.
-meta-batch-size: 16
+meta-batch-size: 8
 
 # TRPO-specific
 # -------------
@@ -54,7 +54,7 @@ cg-iters: 10
 cg-damping: 1.0e-5
 
 # Maximum number of steps in the line search.
-ls-max-steps: 15
+ls-max-steps: 5
 
 # Ratio to use for backtracking during the line search.
-ls-backtrack-ratio: 0.8
+ls-backtrack-ratio: 0.5

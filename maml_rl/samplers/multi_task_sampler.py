@@ -169,7 +169,7 @@ class SamplerWorker(mp.Process):
         self.valid_queue = valid_queue
         self.policy_lock = policy_lock
 
-    def sample(self, index, num_steps=1, fast_lr=0.5, gamma=0.95, gae_lambda=1.0, device='cpu'):
+    def sample(self, index, num_steps=1, fast_lr=0.5, gamma=0.95, gae_lambda=1.0, device='cpu', render=False):
         # Sample the training trajectories with the initial policy and adapt the
         # policy to the task, based on the REINFORCE loss computed on the
         # training trajectories. The gradient update in the fast adaptation uses
@@ -189,24 +189,25 @@ class SamplerWorker(mp.Process):
                 loss = reinforce_loss(self.policy, train_episodes, params=params)
                 params = self.policy.update_params(loss, params=params, step_size=fast_lr, first_order=True)
         # Sample the validation trajectories with the adapted policy
-        valid_episodes = self.create_episodes(params=params, gamma=gamma, gae_lambda=gae_lambda, device=device)
+        valid_episodes = self.create_episodes(params=params, gamma=gamma, gae_lambda=gae_lambda, device=device, render=render)
         valid_episodes.log('_enqueueAt', datetime.now(timezone.utc))
         self.valid_queue.put((index, None, deepcopy(valid_episodes)))
 
-    def create_episodes(self, params=None, gamma=0.95, gae_lambda=1.0, device='cpu'):
+    def create_episodes(self, params=None, gamma=0.95, gae_lambda=1.0, device='cpu', render=False):
         episodes = BatchEpisodes(batch_size=self.batch_size, gamma=gamma, device=device)
         episodes.log('_createdAt', datetime.now(timezone.utc))
         episodes.log('process_name', self.name)
         t0 = time.time()
-        for item in self.sample_trajectories(params=params):
+        for item in self.sample_trajectories(params=params, render=render):
             episodes.append(*item)
         episodes.log('duration', time.time() - t0)
         self.baseline.fit(episodes)
         episodes.compute_advantages(self.baseline, gae_lambda=gae_lambda, normalize=True)
         return episodes
 
-    def sample_trajectories(self, params=None):
+    def sample_trajectories(self, params=None, render=False):
         observations = self.envs.reset()
+        total_rewards = 0
         with torch.no_grad():
             while not self.envs.dones.all():
                 observations_tensor = torch.from_numpy(observations)
@@ -215,8 +216,13 @@ class SamplerWorker(mp.Process):
                 actions = actions_tensor.cpu().numpy()
                 new_observations, rewards, _, infos = self.envs.step(actions)
                 batch_ids = infos['batch_ids']
+                if render: self.envs.render(mode="video")
                 yield (observations, actions, rewards, batch_ids)
                 observations = new_observations
+                total_rewards += rewards[0]
+            if render:
+                print(total_rewards)
+                self.envs.close(path="logging/video.mp4")
 
     def run(self):
         while True:

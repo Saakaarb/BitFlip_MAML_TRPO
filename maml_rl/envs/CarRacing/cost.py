@@ -32,9 +32,10 @@ class CostModel():
 		pos = np.stack([state.X, state.Y], -1)
 		progress = self.track.get_progress(prevpos, pos)
 		dist = self.get_point_cost(pos, transform=False)
+		reward = progress - np.tanh(dist/10)**2 + np.tanh(state.Vx/self.vmin) - np.power(self.vmin-state.Vx,2)/self.vmin**2
 		# reward = 2*progress - np.tanh(dist/20)**2 + np.tanh(state.Vx/self.vmin) - np.power(self.vmin-state.Vx,2)/self.vmin**2
 		# reward = 2*progress - (dist/20)**1.5 - np.logical_or(state.Vx<self.vmin, state.Vx>self.vmax) - 5*(state.Vx>self.vmin)*np.abs(state.δ) + 0.1*np.tanh(state.Vx/self.vmax)
-		reward = (2*progress + 9-(dist/10)**2 - np.logical_or(state.Vx<self.vmin, state.Vx>self.vmax) + 1-(state.Vx/self.vmin)*np.abs(state.δ))/10
+		# reward = (2*progress + 9-(dist/10)**2 - np.logical_or(state.Vx<self.vmin, state.Vx>self.vmax) + 1-(state.Vx/self.vmin)*np.abs(state.δ))/10
 		return -reward
 
 	def get_point_cost(self, pos, transform=True):

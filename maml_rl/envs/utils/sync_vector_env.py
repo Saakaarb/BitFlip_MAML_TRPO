@@ -41,3 +41,9 @@ class SyncVectorEnv(SyncVectorEnv_):
         else:
             observations = None
         return (observations, rewards, np.copy(self._dones), {'batch_ids': batch_ids, 'infos': infos})
+
+    def render(self, **kwargs):
+        self.envs[0].render(**kwargs)
+
+    def close(self, **kwargs):
+        self.envs[0].close(**kwargs)
