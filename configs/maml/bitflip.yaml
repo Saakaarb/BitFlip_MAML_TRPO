@@ -34,7 +34,7 @@ fast-batch-size: 16
 num-steps: 1
 
 # Step size for each gradient step in the inner loop / fast adaptation.
-fast-lr: 0.1
+fast-lr: 0.001
 
 # Optimization
 # ------------
